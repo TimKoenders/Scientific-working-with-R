@@ -3,7 +3,6 @@
 # Class 1 -----------------------------------------------------------------
 getwd()
 dir()
-# setwd("C:\Users\koend\OneDrive\Bureaublad\WU 2023-2024\Scientific working with R and LaTex")
 2 + 2
 2-2
 2/3
@@ -252,6 +251,132 @@ add_two_numbers <- function(a,b) {
   return(result)
 }
 add_two_numbers(10,15)
+
+
+
+
+
+
+
+# Class 2 -----------------------------------------------------------------
+setwd("C:\\Users\\koend\\OneDrive\\Bureaublad\\WU 2023-2024\\Scientific working with R and LaTex\\Scientific-working-with-R")
+data <- read.csv("imdb_top_1000.csv")
+
+above_eleven <- function(x){
+  ind <- (x>11)
+  x[ind]
+}
+above_eleven(c(13,14,5,6,17))
+
+above <-function(x, t = 10) {
+  ind <- (x>t)
+  x[ind]
+}
+
+above(c(13,14,5,6,17), 5)
+
+column_mean <- function(x){
+  nc <- ncol(x)
+  means <- numeric(nc)
+  for (i in 1:nc) {
+    means[i] <- mean(x[,i], na.rm = T)
+  }
+  return(means)
+}
+
+?airquality
+column_mean(airquality)
+
+x <- rnorm(100)
+y <- rnorm(100)
+head(x, 10)
+tail(y,5)
+summary(x)
+df_rndm <- data.frame(x = x, y = y)
+head(df_rndm, 5)
+
+?lm
+args(lm)
+model <- lm(formula = y ~ x, data = df_rndm)
+summary(model)
+
+lm(data = df_rndm, y ~ x)
+
+lm <- function(x)
+{x^2}
+?lm 
+
+stats::lm(data = df_rndm, y ~ x) ## when writing another function yourself that is already an R function one can specify the package corresponding to the function one wants to use
+search()
+
+rm(list=ls())
+
+make_power <- function(n){
+  pow <- function (x){
+    x^n
+  }
+  return(pow)
+}
+
+cube <- make_power(3)
+cube(4)
+fourth_power <- make_power(4)
+fourth_power(4)
+
+install.packages("lubridate")
+library(lubridate)
+today()
+now(tz = "UTC")
+x <- ymd ("2021-01-29")
+class(x)
+mdy("January 20th, 2022")
+dmy("20-January-2021")
+ymd(20210121)
+ymd_hms("2021-01-20 18:45:32")
+now()
+as_date(now())
+
+#Loop functions *apply, split
+
+x<- list(a =1:6, b = rnorm(5))
+x 
+lapply(x, mean)
+
+x <- list(a = matrix(1:6, nrow=2), b=matrix(7:10, nrow=2))
+x
+lapply(x, function(mat){mat[,1]})
+
+y <- 1:3
+runif(10)
+lapply(y, runif)
+lapply(y, runif, min = -20, max =20)
+
+lapply(airquality, mean, na.rm = T)
+
+df <- data.frame(x = c(1,2,3), y = c(T,F,T), x = c(2,5,6))
+df
+lapply(df, class) == "numeric"
+
+
+#str and summary
+data <- read.csv("imdb_top_1000.csv")
+dim(data)
+View(data)
+str(df)
+summary(df)
+
+
+install.packages("tidyverse")
+library(tidyverse)
+?glimpse
+
+# Simulations
+rnorm(10, mean = 0, sd = 1)
+dnorm(1, mean = 0, sd =1)
+pnorm(0, mean = 0, sd =1)
+qnorm(0,975, mean = 0, sd =1)
+
+
 
 
 
