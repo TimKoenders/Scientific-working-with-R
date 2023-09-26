@@ -167,7 +167,7 @@ x - y
 x*y
 x / y
 
-x >= 2
+x >= 2 
 y == 11
 x <- matrix(1:4, nrow =2)
 y <- matrix (5:8, nrow =2)
@@ -259,7 +259,7 @@ add_two_numbers(10,15)
 
 
 # Class 2 -----------------------------------------------------------------
-setwd("C:\\Users\\koend\\OneDrive\\Bureaublad\\WU 2023-2024\\Scientific working with R and LaTex\\Scientific-working-with-R")
+setwd("C:/Users/PC-TC302-10/Downloads")
 data <- read.csv("imdb_top_1000.csv")
 
 above_eleven <- function(x){
@@ -375,6 +375,110 @@ rnorm(10, mean = 0, sd = 1)
 dnorm(1, mean = 0, sd =1)
 pnorm(0, mean = 0, sd =1)
 qnorm(0,975, mean = 0, sd =1)
+
+runif(10)
+
+# seeding
+
+set.seed(1)
+rnorm(10)
+rnorm(10)
+set.seed(1)
+rnorm(10)
+
+set.seed(20)
+x <- rnorm(100)
+e <- rnorm(100, 0, sd =2)
+y <- 0.5 + 3*x + e
+summary(y)
+plot(x,y)
+
+sample(1:10, 4)
+sample(1:10)
+sample(1:10, 4, replace = T)
+
+system.time(rnorm(1000000))
+x <- rnorm(100)
+y <- rnorm(100)
+mean(x)
+sd(x)
+var(x)
+cor(x,y)
+cov(x,y)
+cor(x,y) * sd(x) * sd(y)
+hist(x)
+hist(y, col="cyan", breaks = 20)
+
+install.packages("palmerpenguins")
+library(palmerpenguins)
+?penguins
+dim(penguins)
+View(penguins)
+
+library(ggplot2)
+
+ggplot(data = penguins, aes(x = flipper_length_mm, y = body_mass_g)) + geom_point()
+glimpse(penguins)
+table(factor(penguins$species))
+unique(penguins$species)
+ggplot(data = penguins, aes(x = flipper_length_mm, y = body_mass_g)) + geom_point(aes(color = species))
+ggplot(data = penguins, aes(x = flipper_length_mm, y = body_mass_g)) + geom_point(aes(shape = species, color = species ))
+facet_wrap(~species)
+
+
+?ToothGrowth
+View(ToothGrowth)
+library(dplyr)
+df <- ToothGrowth
+df2 <- filter(df, dose == 0.5)
+df3 <- arrange(df2, len)
+df3 <- arrange(df2, -len)
+df3 <- arrange(df2, desc(len))
+
+View(df3)
+
+arrange(filter(df, dose == 0.5), len)
+
+df %>% 
+  filter(dose == 0.5)  %>% 
+  arrange(len)
+
+
+df %>% 
+  filter(dose == 0.5) %>%
+  group_by(supp) %>%
+  summarize(mean_len = mean(len, na.rm = T))
+
+?diamonds
+library(ggplot2)
+head(diamonds)
+dim(diamonds)
+diamonds2 <- mutate(diamonds, carat2 = carat * 100)
+glimpse(diamonds2)
+
+diamonds %>%
+  mutate(carat2 = carat * 100) %>%
+  select(carat2, cut, price)
+  
+
+data <- read.csv("imdb_top_1000.csv")
+
+install.packages("readxl")
+library(readxl)
+readxl_example()
+read_excel(readxl_example("type-me.xlsx"))
+excel_sheets(readxl_example("type-me.xlsx"), 
+             sheet = "numeric_coercion")
+
+?read_csv
+
+new_df <- diamonds %>%
+  select(price, carat) %>%
+  mutate(price_per_carat = price / carat)
+
+head(new.df)
+write.csv(new_df, "price_per_carat.csv", row.names = F)
+
 
 
 
