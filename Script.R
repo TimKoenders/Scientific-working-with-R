@@ -485,3 +485,321 @@ write.csv(new_df, "price_per_carat.csv", row.names = F)
 
 
 
+.
+# Class 3 -----------------------------------------------------------------
+library(tidyverse)
+library(palmerpenguins)
+library(here)
+library(skimr)
+library(janitor)
+library(dplyr)
+
+View(penguins)
+head(penguins)
+skim_without_charts(penguins) # skim data grame, get useful summary stats
+glimpse(penguins)
+head(penguins)
+
+penguins %>% 
+  dplyr::select(-species)
+
+penguins %>% 
+  rename(island_new = island, bill_length = bill_length_mm)
+
+penguins <- rename_with(penguins, toupper)
+glimpse(penguins)
+
+penguins <- clean_names(penguins) 
+penguins <- rename_with(penguins, tolower)
+penguins
+
+penguins %>% arrange(-bill_length_mm)
+glimpse(penguins)
+
+
+penguins %>% group_by(island) %>% drop_na() %>% 
+  summarize(mean_bill_length_mm = mean(bill_length_mm))
+
+penguins %>% group_by(island) %>% 
+  summarize(mean_bill_length_mm = mean(bill_length_mm, na.rm = T))
+
+penguins %>% group_by(island) %>% 
+  summarize(max_bill_length_mm = max(bill_length_mm, na.rm = T), 
+            min_bill_length_mm = min(bill_length_mm, na.rm = T))
+
+penguins %>% group_by(species, island) %>% drop_na() %>% 
+  summarize(mean_bill_length_mm = mean(bill_length_mm),
+            max_bill_length_mm = max(bill_length_mm))
+
+penguins %>% filter(species == "Adelie", island == "Dream")
+
+# separate, unite, mutate
+
+View(penguins)
+
+? unite
+penguins2 <- penguins %>%
+  unite(species_island, c("species", "island"), sep = "-")
+glimpse(penguins2)
+View(penguins2)
+
+? mutate
+penguins2 %>% mutate(body_mass_kg = body_mass_g / 1000) %>%
+  group_by(species_island) %>%
+  summarize(mean_body_mass = mean(body_mass_kg, na.rm = TRUE))
+View(penguins2)
+
+? separate
+penguins_back <- penguins2 %>%
+  separate(species_island, into = c('species', 'island'), sep = '-')
+penguins_back
+
+# Anscombe's quartet
+install.packages("Tmisc")
+library(Tmisc)
+? Tmisc
+data(quartet)
+View(quartet)
+glimpse(quartet)
+
+quartet %>% 
+  group_by(set) %>%
+  summarize(mean(x), sd(x), mean(y), sd(y), cor(x, y))
+
+ggplot(quartet, aes(x, y)) + 
+  geom_point() +
+  geom_smooth(method = stats::lm, se = F) +
+  facet_wrap(~set)
+
+install.packages('datasauRus')
+library(datasauRus)
+glimpse(datasaurus_dozen)
+
+ggplot(datasaurus_dozen, aes(x, y, colour = dataset)) +
+  geom_point() +
+  facet_wrap(~dataset, ncol = 3) +
+  theme_void() + 
+  theme(legend.position = "none")
+
+# plotting penguins
+glimpse(penguins)
+
+ggplot(data = penguins, aes(x = flipper_length_mm, y = body_mass_g)) + 
+  geom_point(aes(color = species, size = species, alpha = species))
+
+ggplot(data = penguins, aes(x = flipper_length_mm, y = body_mass_g)) + 
+  geom_point(aes(color = species, size = species, alpha = species)) +
+  geom_smooth()
+
+ggplot(data = penguins, aes(x = flipper_length_mm, y = body_mass_g)) + 
+  geom_point(aes(color = species)) +
+  geom_smooth(method = lm, se = T)
+
+ggplot(data = penguins, aes(x = flipper_length_mm, y = body_mass_g)) + 
+  geom_point(aes(color = species)) +
+  geom_smooth(aes(linetype = penguins$species), method = lm)
+
+ggplot(data = penguins, aes(x = flipper_length_mm, y = body_mass_g)) +
+  geom_jitter()
+
+# to diamonds
+ggplot(data = diamonds, aes(x = cut, fill = cut)) + 
+  geom_bar()
+
+ggplot(data = diamonds, aes(x = carat)) + 
+  geom_histogram(color = "magenta", fill = "lightblue")
+
+ggplot(data = diamonds, aes(x = carat, fill = cut)) + 
+  geom_histogram(color = "magenta")
+
+ggplot(data = diamonds, aes(x = carat, fill = cut)) + 
+  geom_histogram(color = "magenta")
+
+breaks_vector <- seq(0, 3, 0.2)
+ggplot(data = diamonds, aes(x = carat, fill = cut)) + 
+  geom_histogram(color = "magenta", breaks = breaks_vector) +
+  theme_minimal() + 
+  theme(legend.position = "none") +
+  xlab("Carats") + 
+  ylab("Number of diamonds") +
+  labs(title = "Histogram",
+       subtitle = "Carats",
+       caption = "What do colors mean? Look at the legend!",
+       fill = "Goodness of cut")
+
+plot1 <- ggplot(data = diamonds, aes(x = carat, fill = cut)) + 
+  geom_histogram(color = "magenta", breaks = breaks_vector) +
+  theme_minimal()
+print(plot1)
+
+
+plot1 + xlab("Carats") + 
+  ylab("Number of diamonds") +
+  labs(title = "Histogram",
+       subtitle = "Carats",
+       caption = "What do colors mean? Look at the legend!",
+       fill = "Goodness of cut")
+
+ggplot(data = diamonds, aes(x = cut, y = carat, color = cut)) + 
+  geom_boxplot()
+
+
+# Facets --- display smaller groups, subsets of your data
+# facet_wrap, facet_grid
+ggplot(data = penguins) +
+  geom_point(aes(x = flipper_length_mm, y = body_mass_g, color = species)) +
+  facet_wrap(~species)
+
+ggplot(data = diamonds, aes(x = carat, fill = cut)) + 
+  geom_histogram(color = "magenta", breaks = breaks_vector) +
+  facet_wrap(~cut)
+
+ggplot(data = diamonds, aes(x = carat, fill = cut)) + 
+  geom_histogram(color = "magenta", breaks = breaks_vector) +
+  facet_wrap(~cut, ncol = 5)
+
+# two variables?
+ggplot(data = penguins) +
+  geom_point(aes(x = flipper_length_mm, y = body_mass_g, color = species)) +
+  facet_wrap(~sex~species)
+
+ggplot(data = penguins) +
+  geom_point(aes(x = flipper_length_mm, y = body_mass_g, color = species)) +
+  facet_grid(sex ~ species)
+
+ggplot(data = drop_na(penguins)) +
+  geom_point(aes(x = flipper_length_mm, y = body_mass_g, color = species)) +
+  facet_grid(sex ~ species)
+
+# dplyr + ggplot2
+penguins %>% 
+  drop_na() %>%
+  filter(species == "Adelie") %>% 
+  ggplot(aes(x = flipper_length_mm, y = body_mass_g, color = island)) +
+  geom_point(alpha = 0.5) +
+  annotate("text", x = 205, y = 3200, label = "NO POINTS HERE!",
+           fontface = "italic", size = 3, angle = 40)
+
+# saving: export or ggsave
+
+ggsave("figure1.png")
+
+# CHEATSHEET https://github.com/rstudio/cheatsheets/blob/main/data-visualization.pdf
+glimpse(diamonds)
+
+model <- lm(log(price) ~ log(carat), data = diamonds)
+summary(model)
+vcov(model)
+coef(model)
+
+confint(model, level = 0.99)
+
+residuals <- resid(model)
+summary(residuals)
+
+ggplot(data = diamonds, aes(x = log(carat), y = log(price))) + 
+  geom_point()
+
+df <- diamonds
+df$residuals <- residuals
+
+residual_plot <- ggplot(data = df, aes(x = log(carat), y = residuals^2)) +
+  geom_point() 
+print(residual_plot)
+
+# too many points? you can use hexes
+install.packages("hexbin")
+library(hexbin)
+
+residual_plot + 
+  geom_hex()
+
+### INTERACTIVE PLOTS
+install.packages("plotly")
+library(plotly)
+
+install.packages("gapminder")
+library(gapminder)
+
+?gapminder
+plot <- gapminder %>%
+  rename(population = pop) %>%
+  filter(year == 1977) %>%
+  ggplot(aes(gdpPercap, lifeExp, color = continent)) +
+  geom_point() +
+  theme_minimal() + 
+  xlab("GDP per capita") + 
+  ylab("Life expectancy")
+print(plot)
+
+ggplotly(plot)
+
+# Can also add sliders and so on...
+# https://plotly.com/r/sliders/
+
+# LINEAR REGRESSION
+
+library(ISLR2)
+?Boston
+glimpse(Boston)
+df <- Boston %>%
+  rename(
+    crime_rate = crim,
+    zoning_prop = zn,
+    non_retail_business_prop = indus,
+    charles_river = chas,
+    nitrogen_ox = nox,
+    aver_num_of_rooms = rm,
+    dist_to_empl_centres = dis,
+    house_age = age,
+    highway_access = rad,
+    pupil_teacher_ratio = ptratio,
+    low_socecon_status_prop = lstat,
+    med_house_value = medv
+  )
+
+glimpse(df)
+summary(df)
+
+linear_reg_1 <- lm(data = df, 
+                   med_house_value ~ low_socecon_status_prop)
+summary(linear_reg_1)
+
+coef(linear_reg_1)[2]
+confint(linear_reg_1)
+y_hat <- predict(linear_reg_1, df[, "low_socecon_status_prop", drop = F])
+
+ggplot(data.frame(y_hat = y_hat, y_act = df$med_house_value),
+       aes(x = y_act, y = y_hat)) + geom_point()
+
+res <- residuals(linear_reg_1)
+ggplot(data.frame(x = res), aes(x = x)) +
+  geom_density()
+
+linear_reg_2 <- lm(data = df,
+                   med_house_value ~ low_socecon_status_prop + 
+                     house_age)
+summary(linear_reg_2)
+
+linear_reg_3 <- lm(data = df,
+                   med_house_value ~ .)
+summary(linear_reg_3)
+
+linear_reg_4 <- lm(data = df,
+                   med_house_value ~ . - non_retail_business_prop)
+summary(linear_reg_4)
+
+# can use memisc to concatenate results together
+library(stargazer)
+
+stargazer(linear_reg_1, linear_reg_2, linear_reg_3,
+          type = "text")
+
+
+stargazer(linear_reg_1, linear_reg_2, linear_reg_3,
+          title = "Four regressions for Boston data",
+          type = "latex",
+          out = "table1.tex")
+
+View(cor(df))
+
