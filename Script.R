@@ -803,3 +803,301 @@ stargazer(linear_reg_1, linear_reg_2, linear_reg_3,
 
 View(cor(df))
 
+
+# Class 4 -----------------------------------------------------------------
+library(tidyverse)
+library(ISLR2)
+
+df <- Boston %>%
+  rename(
+    crime_rate = crim,
+    zoning_prop = zn,
+    non_retail_business_prop = indus,
+    charles_river = chas,
+    nitrogen_ox = nox,
+    aver_num_of_rooms = rm,
+    dist_to_empl_centres = dis,
+    house_age = age,
+    highway_access = rad,
+    pupil_teacher_ratio = ptratio,
+    low_socecon_status_prop = lstat,
+    med_house_value = medv
+  )
+
+linear_reg_1 <- lm(data = df, 
+                   med_house_value ~ low_socecon_status_prop)
+
+linear_reg_2 <- lm(data = df,
+                   med_house_value ~ low_socecon_status_prop + 
+                     house_age)
+
+linear_reg_3 <- lm(data = df,
+                   med_house_value ~ .)
+
+# stargazer output  --- reporting outputs
+library(stargazer)
+
+stargazer(linear_reg_1, linear_reg_2, linear_reg_3,
+          type = "text")
+
+stargazer(linear_reg_1, linear_reg_2, linear_reg_3,
+          title = "Four regressions for Boston data",
+          type = "latex",
+          out = "table1.tex")
+
+View(cor(df))
+glimpse(df)
+stargazer(cor(df), title = "Correlations",
+          type = "latex", out = "cor_table.tex")
+
+linear_reg <- lm(data = df, med_house_value ~  pupil_teacher_ratio + 
+                   nitrogen_ox + dist_to_empl_centres + house_age)
+summary(linear_reg)
+coefs <- coef(linear_reg) # coefficient estimates
+vcov(linear_reg)
+sd_coefs <- linear_reg %>% vcov() %>% diag() %>% sqrt() # sd of coefficients
+t_stats <- coefs / sd_coefs # t statistics
+t_stats
+
+n <- nrow(df)
+p <- length(coefs) - 1
+ggplot(data.frame(grid = seq(-5, 5, 0.5)), aes(x = grid)) + 
+  geom_function(fun = dt, args = list(df = n - p - 1)) + 
+  geom_vline(xintercept = t_stats["house_age"], color = "red") +
+  geom_vline(xintercept = -t_stats["house_age"], color = "red")
+
+pt(t_stats["house_age"], df = n - p - 1) * 2 # p-value
+
+# factors
+df <- data.frame(
+  y = c(15, 12, 11, 8, 2.5, 6, 5),
+  x = c("high", "high", "high", "medium", "low", "medium", "low")
+)
+glimpse(df)
+df$x <- factor(df$x, c("low", "medium", "high"))
+ggplot(df, aes(x = y, y = 0, color = x)) + geom_point() 
+
+simple_lr <- lm(data = df, y ~ x)
+summary(simple_lr)
+
+# Testing for heteroscedasticity
+?diamonds
+model <- lm(data = diamonds,
+            log(price) ~ log(carat))
+summary(model)
+
+install.packages("lmtest")
+library(lmtest)
+?bptest
+# Breusch-Pagan heteroscedasticity test
+# H_0: no heteroscedasticity
+bptest(model)
+
+df <- Boston %>%
+  rename(
+    crime_rate = crim,
+    zoning_prop = zn,
+    non_retail_business_prop = indus,
+    charles_river = chas,
+    nitrogen_ox = nox,
+    aver_num_of_rooms = rm,
+    dist_to_empl_centres = dis,
+    house_age = age,
+    highway_access = rad,
+    pupil_teacher_ratio = ptratio,
+    low_socecon_status_prop = lstat,
+    med_house_value = medv
+  )
+
+glimpse(df)
+# Boston dataframe, continued
+df %>% select(-med_house_value) %>% cor() %>% View()
+
+df2 <- data.frame(y = c(1, 3, 4, 9),
+                  x1 = c(1, 2, 2, 3),
+                  x2 = c(1, 2, 2, 3.0001))
+model_with_multic <- lm(data = df2, y ~ .)
+summary(model_with_multic)
+
+linear_model <- lm(data = df, med_house_value ~ .)
+summary(linear_model)
+
+#  Ridge or Lasso regression to adress multicollinearity as they impose some regularization.
+install.packages("glmnet")
+library(glmnet)
+?glmnet
+y <- df$med_house_value
+X <- df %>% select(-med_house_value) %>% data.matrix()
+
+lasso_model <- glmnet(X, y, alpha = 1, lambda = 0.4)
+coef(lasso_model)
+coef(linear_model)
+
+lasso_coef_dynamics <- function(lambda, coef_name) {
+  build_model <- glmnet(X, y, alpha = 1, lambda = lambda)
+  current_coef <- coef(build_model)[coef_name, 1]
+  return(current_coef)
+}
+# vectorized version of the function above
+lasso_coef_dynamics_vec <- function(lambdas, coef_name) {
+  result <- lapply(lambdas, lasso_coef_dynamics, coef_name)
+  result <- unlist(result) # list to vector when appropriate
+  return(result)
+}
+
+plot_coef_dynamics <- function(coef_name) {
+  plot <- ggplot(data.frame(lambda_grid = seq(0, 2, 0.05)), aes(x = lambda_grid)) + 
+    geom_function(fun = lasso_coef_dynamics_vec, args = list(coef_name = coef_name), color = "red") +
+    geom_hline(yintercept = 0, linetype = 'dotted') +
+    ylab(paste("Coefficient for", coef_name))
+  print(plot)
+}
+
+plot_coef_dynamics("crime_rate")
+plot_coef_dynamics("nitrogen_ox")
+plot_coef_dynamics("house_age")
+
+y_hat <- predict(lasso_model, X) # predicted y
+
+# ridge regression
+ridge_model <- glmnet(X, y, alpha = 0, lambda = 0.4)
+coef(ridge_model) %>% round(2)
+
+# train-test
+?Auto
+dim(Auto)
+glimpse(Auto)
+View(Auto)
+
+n <- nrow(Auto)
+test_prop <- 0.2
+set.seed(9)
+train <- sample(n, (1 - test_prop) * n)
+
+?predict
+
+model_train <- lm(data = Auto, mpg ~ horsepower, subset = train)
+summary(model_train)
+pred_mpg <- predict(model_train, Auto[-train, "horsepower", drop = F])
+act_mpg <- Auto[-train, "mpg"]
+MSE <- mean((act_mpg - pred_mpg)^2)
+
+model_train_2 <- lm(data = Auto, mpg ~ horsepower + I(horsepower^2), subset = train)
+summary(model_train_2)
+pred_mpg_2 <- predict(model_train_2, Auto[-train, "horsepower", drop = F])
+act_mpg_2 <- Auto[-train, "mpg"]
+MSE_2 <- mean((act_mpg_2 - pred_mpg_2)^2)
+
+
+
+MSE_function <- function(pow, seed) {
+  set.seed(seed)
+  train <- sample(n, (1 - test_prop) * n)
+  model_train <- lm(data = Auto, mpg ~ poly(horsepower, pow), subset = train)
+  pred_mpg <- predict(model_train, Auto[-train, "horsepower", drop = F])
+  act_mpg <- Auto[-train, "mpg"]
+  MSE <- mean((act_mpg - pred_mpg)^2)
+  return(MSE)
+}
+
+cat(
+  MSE_function(1, seed = 20), 
+  MSE_function(2, seed = 20), 
+  MSE_function(3, seed = 20), 
+  MSE_function(4, seed = 20), 
+  MSE_function(5, seed = 20)
+)
+
+
+ggplot(data = Auto, aes(x = horsepower, y = mpg)) + geom_point()
+
+# cross-validation (k-fold)
+install.packages("boot")
+library(boot)
+?cv.glm
+linear_reg <- glm(data = Auto, mpg ~ horsepower)
+cv.glm(Auto, linear_reg, K = 10)$delta # second element "bias-corrected ver."
+
+linear_reg_2 <- glm(data = Auto, mpg ~ poly(horsepower, 2))
+cv.glm(Auto, linear_reg_2, K = 10)$delta
+
+?cv.glmnet
+# cv.glmnet- for lasso - optimal lambda and comparison of models
+
+n <- nrow(df)
+test_prop <- 0.2
+set.seed(12)
+train <- sample(n, (1 - test_prop) * n)
+
+X <- df %>% select(-med_house_value) %>% data.matrix()
+y_train <- df[train, "med_house_value"]
+y_test <- df[-train, "med_house_value"]
+X_train <- X[train, ]
+X_test <- X[-train, ]
+
+linear_model_train <- lm(data = df, med_house_value ~ ., subset = train)
+y_hat <- predict(linear_model_train, data.frame(X_test))
+linear_model_MSE <- mean((y_test - y_hat)^2)
+
+lambda_grid <- seq(0.01, 5, 0.01)
+lasso_model <- glmnet(X_train, y_train, alpha = 1, lambda = lambda_grid)
+# model_train <- lm(data = Auto, mpg ~ horsepower, subset = train)
+cv_lasso <- cv.glmnet(X_train, y_train, alpha = 1)
+lambda_best <- cv_lasso$lambda.min
+y_hat_lasso <- predict(lasso_model, s = lambda_best, X_test)
+best_lasso_MSE <- mean((y_test - y_hat_lasso)^2)
+
+cat(linear_model_MSE, best_lasso_MSE)
+
+winner_model <- glmnet(X_train, y_train, alpha = 1, lambda = lambda_best)
+coef(winner_model)
+
+# logistic and probit regressions
+df_default <- ISLR2::Default
+glimpse(df_default)
+summary(df_default)
+
+ggplot(data = df_default, 
+       aes(x = income, y = balance, color = default, shape = default)) + geom_point()
+
+logit <- glm(data = df_default, 
+             default ~ balance + income + student,
+             family = binomial(link = "logit"))
+summary(logit)
+
+pred_logit_probs <- predict(logit, type = "response")
+pred_logit_outcomes <- rep("No", nrow(df_default))
+pred_logit_outcomes[pred_logit_probs > 0.5] <- "Yes"
+pred_logit_outcomes <- as.factor(pred_logit_outcomes)
+
+table(df_default$default, pred_logit_outcomes)
+
+probit <- glm(data = df_default, 
+              default ~ balance + income + student,
+              family = binomial(link = "probit"))
+summary(probit)
+
+pred_probit_probs <- predict(probit, type = "response")
+pred_probit_outcomes <- rep("No", nrow(df_default))
+pred_probit_outcomes[pred_probit_probs > 0.5] <- "Yes"
+pred_probit_outcomes <- as.factor(pred_probit_outcomes)
+
+table(df_default$default, pred_probit_outcomes)
+
+stargazer(logit, probit, type = "text")
+
+install.packages("devtools")
+library(devtools)
+devtools::install_github("selva86/InformationValue")
+library(InformationValue)
+
+converted_outcome <- ifelse(df_default$default == "Yes", 1, 0)
+optimal_cutoff <- optimalCutoff(converted_outcome, pred_logit_probs)
+pred_logit_outcomes <- rep("No", nrow(df_default))
+pred_logit_outcomes[pred_logit_probs > optimal_cutoff] <- "Yes"
+pred_logit_outcomes <- as.factor(pred_logit_outcomes)
+
+confusionMatrix(converted_outcome, pred_logit_probs)
+misClassError(converted_outcome, pred_logit_probs, threshold = optimal_cutoff)
+plotROC(converted_outcome, pred_logit_probs)
+
